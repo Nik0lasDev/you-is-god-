@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#101a22">
+<title>You Is God — Divine Sandbox</title>
+<style>
+:root{color-scheme:dark;--bg:#101a22;--panel:#182630;--panel2:#203440;--line:#344b58;--muted:#9db1bb;--gold:#f4c96b;--cyan:#7bd6dc;--green:#91d69a;--red:#ed8888}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#e9f0ed;font:14px/1.4 Inter,ui-sans-serif,system-ui,sans-serif;overflow:hidden}
+button{font:inherit;color:inherit;background:#263d49;border:1px solid #405b68;border-radius:8px;padding:8px 11px;cursor:pointer;transition:.15s}
+button:hover{background:#345361;border-color:#6b909c}button:disabled{opacity:.35;cursor:not-allowed}
+.app{height:100dvh;display:grid;grid-template-rows:58px 1fr}
+.top{display:flex;align-items:center;gap:16px;padding:0 18px;background:#121f28;border-bottom:1px solid var(--line);z-index:2}
+.brand{font-weight:900;letter-spacing:2px;color:var(--gold);font-size:16px}.brand small{display:block;font-size:9px;color:var(--muted);letter-spacing:3px;font-weight:600}
+.topstats{display:flex;gap:16px;margin-left:auto;align-items:center}.stat{display:flex;flex-direction:column;font-size:11px;color:var(--muted)}.stat strong{font-size:14px;color:#fff;font-variant-numeric:tabular-nums}
+.layout{min-height:0;display:grid;grid-template-columns:250px minmax(0,1fr) 280px}
+aside{background:var(--panel);min-height:0;overflow:auto;padding:14px;border-right:1px solid var(--line)}.right{border-right:0;border-left:1px solid var(--line)}
+.section{margin-bottom:17px}.section h3{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin:0 0 9px}
+.levelbox{background:linear-gradient(135deg,#344a51,#1c303a);border:1px solid #4b6570;border-radius:12px;padding:12px;margin-bottom:16px}
+.levelrow{display:flex;align-items:center;justify-content:space-between}.level{font-size:25px;font-weight:900;color:var(--gold)}.xpbar,.bar{height:7px;border-radius:10px;background:#0c171e;overflow:hidden;margin-top:8px}.xpbar span,.bar span{height:100%;display:block;background:linear-gradient(90deg,#dba94c,#ffe5a0);width:0;transition:width .2s}
+.power-list{display:grid;gap:7px}.power{display:flex;align-items:center;gap:9px;text-align:left;width:100%;padding:9px}.power .ico{font-size:19px;width:25px;text-align:center}.power small{display:block;color:var(--muted);font-size:10px}.power.active{border-color:var(--gold);background:#4b412b}.power.locked{opacity:.48}
+.world{position:relative;min-width:0;min-height:0;background:#101b20;overflow:hidden;display:flex;flex-direction:column}
+.worldbar{display:flex;align-items:center;gap:8px;padding:9px 12px;background:#15242d;border-bottom:1px solid var(--line);z-index:1}.worldbar .spacer{flex:1}.worldbar span{font-size:11px;color:var(--muted)}
+.canvaswrap{flex:1;min-height:0;position:relative;overflow:hidden}canvas{display:block;width:100%;height:100%;image-rendering:pixelated;cursor:crosshair}
+.hint{position:absolute;left:12px;bottom:12px;background:#111dcee0;border:1px solid #47606a;border-radius:8px;padding:8px 10px;color:#d7e3df;font-size:11px;pointer-events:none;max-width:calc(100% - 24px)}
+.panel-card{background:#20343f;border:1px solid #38515d;border-radius:10px;padding:10px;margin-bottom:9px}.muted{color:var(--muted)}.tiny{font-size:11px}.row{display:flex;justify-content:space-between;align-items:center;gap:8px}.pill{font-size:10px;padding:3px 7px;border-radius:20px;background:#314c57;color:#c5d7d9}
+.request{border-left:3px solid var(--gold)}.request button{width:100%;margin-top:8px}.request.done{opacity:.65;border-left-color:var(--green)}
+.metric{display:grid;grid-template-columns:1fr auto;gap:6px;margin:7px 0;font-size:12px}.metric strong{font-variant-numeric:tabular-nums}
+.log{font-size:11px;color:#b5c5c8;display:grid;gap:7px}.log div{border-bottom:1px solid #304550;padding-bottom:6px}
+.tabs{display:flex;gap:5px;margin-bottom:10px}.tabs button{flex:1;font-size:11px;padding:7px 4px}.tabs button.active{background:#425d68;border-color:var(--cyan)}
+#toast{position:absolute;top:65px;left:50%;transform:translateX(-50%);background:#233d46;border:1px solid #6e9b9b;padding:9px 15px;border-radius:9px;opacity:0;pointer-events:none;transition:.2s;z-index:5}#toast.show{opacity:1}
+.mobile-toggle{display:none}
+@media(max-width:980px){.layout{grid-template-columns:210px minmax(0,1fr)}.right{display:none}.topstats{gap:9px}}
+@media(max-width:650px){.app{grid-template-rows:auto 1fr}.top{padding:8px 10px;flex-wrap:wrap;gap:7px}.topstats{width:100%;margin:0;justify-content:space-between}.layout{grid-template-columns:1fr}.left{display:none;position:absolute;z-index:4;top:91px;bottom:0;width:min(300px,88vw);box-shadow:0 10px 30px #0009}.left.open{display:block}.worldbar{overflow:auto}.worldbar button{white-space:nowrap}.brand{font-size:14px}.mobile-toggle{display:block}.stat strong{font-size:12px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="top">
+<button class="mobile-toggle" id="menuBtn" aria-label="Abrir poderes">☰</button>
+<div class="brand">YOU IS GOD <small>DIVINE SANDBOX</small></div>
+<div class="topstats">
+<div class="stat">XP POR SEGUNDO<strong id="xpRate">0</strong></div>
+<div class="stat">FÉ<strong id="faithCount">0</strong></div>
+<div class="stat">POPULAÇÃO<strong id="population">0</strong></div>
+<div class="stat">ERA ATUAL<strong id="eraTop">—</strong></div>
+</div>
+</header>
+<div class="layout">
+<aside class="left" id="leftPanel">
+<div class="levelbox">
+<div class="levelrow"><div><div class="muted tiny">NÍVEL DIVINO</div><div class="level" id="level">1</div></div><span class="pill" id="nextPower">Próximo poder: 2</span></div>
+<div class="row tiny" style="margin-top:8px"><span>Experiência</span><strong id="xpText">0 / 100</strong></div><div class="xpbar"><span id="xpBar"></span></div>
+</div>
+<section class="section"><h3>Poderes divinos</h3><div class="power-list" id="powers"></div></section>
+<section class="section"><h3>Ritmo do mundo</h3><div class="row"><button id="pauseBtn">Ⅱ Pausar</button><button id="speedBtn">Velocidade ×1</button></div><p class="muted tiny">O tempo continua passando enquanto você observa as civilizações.</p></section>
+<section class="section"><h3>Controles</h3><p class="tiny muted">Clique no mapa para usar o poder selecionado. Arraste com o botão direito para mover a câmera. Use a roda do mouse para aproximar.</p><button id="clearSelection" style="width:100%">Cancelar poder selecionado</button></section>
+</aside>
+<main class="world">
+<div class="worldbar"><button data-tool="inspect" class="toolbtn">⌖ Observar</button><button data-tool="bless" class="toolbtn">✦ Benção</button><button data-tool="rain" class="toolbtn">☔ Chuva</button><button data-tool="forest" class="toolbtn">♣ Floresta</button><div class="spacer"></div><span id="worldTime">Ano 1 · Primavera</span></div>
+<div class="canvaswrap"><canvas id="world"></canvas><div class="hint" id="hint">Selecione um poder e clique no mundo para usá-lo. Os humanos estão começando sua história.</div><div id="toast"></div></div>
+</main>
+<aside class="right">
+<div class="tabs"><button class="active" data-tab="requests">Pedidos</button><button data-tab="civilization">Civilizações</button><button data-tab="history">Histórico</button></div>
+<div id="tab-requests">
+<div class="section"><h3>Pedidos dos mortais</h3><div id="requests"><p class="muted tiny">Os humanos ainda não fizeram pedidos.</p></div></div>
+</div>
+<div id="tab-civilization" hidden>
+<div class="section"><h3>Estado do mundo</h3><div id="worldMetrics"></div></div>
+<div class="section"><h3>Era da humanidade</h3><div class="panel-card"><strong id="eraName">Era Primitiva</strong><p id="eraDesc" class="tiny muted">Pequenos grupos começam a se organizar.</p><div class="bar"><span id="eraProgress"></span></div><p class="tiny muted" id="eraCondition"></p></div></div>
+</div>
+<div id="tab-history" hidden><div class="section"><h3>Crônicas do mundo</h3><div class="log" id="history"></div></div></div>
+<div class="section"><h3>Habitante selecionado</h3><div id="selectedInfo" class="panel-card tiny muted">Clique em um humano no mapa para conhecer sua história.</div></div>
+<div class="section"><h3>Fé e experiência</h3><div class="panel-card tiny">A paz gera <strong>+0,4 XP/s</strong>. Cada pessoa que acredita em você aumenta a geração de XP. Atender pedidos também fortalece a fé.</div></div>
+</aside>
+</div>
+</div>
+<script>
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const canvas = $('world'), ctx = canvas.getContext('2d');
+const W=88,H=58,TILE=16;
+const terrain=[], humans=[], requests=[], history=[];
+const eras=[
+{name:'Era Primitiva',desc:'Bandos nômades aprendem a sobreviver e cooperar.',need:0,pop:0},
+{name:'Era Tribal',desc:'Clãs se unem em torno de tradições e líderes.',need:12,pop:12},
+{name:'Era Agrícola',desc:'A agricultura permite aldeias permanentes e excedentes.',need:22,pop:24},
+{name:'Era dos Tecelões',desc:'Tecidos, cerâmica e ofícios especializados transformam a vida.',need:32,pop:40},
+{name:'Era do Cobre',desc:'As primeiras ferramentas metálicas ampliam a produção.',need:42,pop:60},
+{name:'Era do Bronze',desc:'Comércio e cidades muradas conectam diferentes povos.',need:52,pop:90},
+{name:'Era do Ferro',desc:'Estradas, escrita e novas técnicas mudam as sociedades.',need:62,pop:130},
+{name:'Era dos Reinos',desc:'Reinos organizados disputam influência e território.',need:72,pop:180},
+{name:'Era Medieval',desc:'Castelos, universidades e guildas florescem.',need:82,pop:240},
+{name:'Era das Navegações',desc:'Navios cruzam mares e conectam continentes.',need:92,pop:320},
+{name:'Era Renascentista',desc:'Arte, ciência e pensamento crítico aceleram o progresso.',need:102,pop:420},
+{name:'Era Industrial',desc:'Máquinas e fábricas mudam a escala da civilização.',need:112,pop:560},
+{name:'Era Elétrica',desc:'Eletricidade, comunicação e medicina avançam.',need:122,pop:720},
+{name:'Era Atômica',desc:'A energia nuclear inaugura uma nova etapa tecnológica.',need:132,pop:900},
+{name:'Era Digital',desc:'Computadores e redes conectam toda a humanidade.',need:142,pop:1100},
+{name:'Era Espacial',desc:'A humanidade alcança as estrelas.',need:152,pop:1400},
+{name:'Era Interestelar',desc:'Colônias distantes compartilham conhecimento e recursos.',need:162,pop:1800},
+{name:'Era Transcendente',desc:'A humanidade começa a superar seus antigos limites.',need:172,pop:2300}
+];
+const powers=[
+{id:'inspect',name:'Observação',icon:'⌖',level:1,desc:'Conheça os habitantes.'},
+{id:'bless',name:'Benção divina',icon:'✦',level:1,desc:'Aumenta felicidade e fé.'},
+{id:'rain',name:'Chuva',icon:'☔',level:2,desc:'Faz plantas crescerem e ajuda plantações.'},
+{id:'forest',name:'Criar floresta',icon:'♣',level:3,desc:'Planta árvores em uma região.'},
+{id:'heal',name:'Cura divina',icon:'♡',level:4,desc:'Cura habitantes próximos.'},
+{id:'food',name:'Criar alimento',icon:'✿',level:5,desc:'Envia alimento aos habitantes próximos.'},
+{id:'lightning',name:'Raio',icon:'ϟ',level:7,desc:'Invoca um raio em um ponto do mapa.'},
+{id:'build',name:'Aldeia',icon:'⌂',level:9,desc:'Ajuda a fundar uma nova comunidade.'},
+{id:'shield',name:'Proteção',icon:'◇',level:12,desc:'Protege uma região contra ameaças.'},
+{id:'revive',name:'Ressurreição',icon:'☼',level:16,desc:'Traz de volta um habitante perdido.'}
+];
+const colors={water:'#315f79',sand:'#b5a16d',grass:'#628b59',forest:'#426d4b',mountain:'#777b72'};
+let level=1,xp=0,selectedTool='inspect',paused=false,speed=1,year=1,season=0,elapsed=0,spawnTimer=0,requestTimer=0,eraIndex=0,selectedHuman=null,camera={x:W*TILE/2,y:H*TILE/2,zoom:1},drag=null,last=performance.now(),toastTimer=0;
+const rnd=(a,b)=>Math.random()*(b-a)+a,ri=(a,b)=>Math.floor(rnd(a,b)),clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function log(msg){history.unshift({year,msg});if(history.length>35)history.pop();$('history').innerHTML=history.slice(0,15).map(x=>'<div><span class="muted">Ano '+x.year+'</span><br>'+escapeHtml(x.msg)+'</div>').join('')}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function toast(s){$('toast').textContent=s;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('show'),1800)}
+function initWorld(){
+ for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+  const n=Math.sin(x*.16)*Math.cos(y*.14)+Math.sin((x+y)*.08)+rnd(-.6,.6);
+  let type=n<-.72?'water':n<-.42?'sand':n>1.05?'mountain':n>.55?'forest':'grass';
+  if(x<3||y<3||x>W-4||y>H-4)type='water';
+  terrain.push({type,tree:type==='forest'&&Math.random()<.7});
+ }
+ for(let i=0;i<18;i++)spawnHuman(ri(10,W-10),ri(10,H-10),true);
+ log('A humanidade surgiu em um mundo novo. Sua história começa agora.');
+}
+function tileAt(x,y){return terrain[y*W+x]}
+function spawnHuman(x,y,initial=false){
+ for(let k=0;k<20;k++){const tx=clamp(x+ri(-3,4),2,W-3),ty=clamp(y+ri(-3,4),2,H-3),t=tileAt(tx,ty);if(t&&t.type!=='water'&&t.type!=='mountain'){humans.push({id:Math.random().toString(36).slice(2),x:tx+.5,y:ty+.5,age:rnd(18,42),health:100,hunger:rnd(65,100),happiness:rnd(50,80),faith:rnd(0,initial?18:8),believer:false,era:0,job:'Coletor',name:['Aru','Nima','Tarek','Luma','Ivo','Sena','Kiro','Mira'][ri(0,8)]+' '+['do Vale','da Colina','das Águas','da Floresta'][ri(0,4)],home:null,protected:0});return}}
+}
+function population(){return humans.length}
+function believers(){return humans.filter(h=>h.believer).length}
+function peace(){return !humans.some(h=>h.war)}
+function xpRate(){return (peace()?.4:0)+believers()*.035}
+function addXp(n){xp+=n;while(xp>=xpNeed()){xp-=xpNeed();level++;log('Você alcançou o nível divino '+level+'. Novos poderes podem ser desbloqueados.');toast('Nível divino '+level+' alcançado!')} }
+function xpNeed(){return Math.floor(100*Math.pow(level,1.48))}
+function currentEra(){return eras[eraIndex]}
+function checkEra(){
+ const next=eras[eraIndex+1];if(!next)return;
+ const believersRatio=believers()/Math.max(1,humans.length);
+ if(humans.length>=next.pop&&believersRatio*100>=Math.min(70,next.need-5)&&humans.filter(h=>h.hunger>25).length>humans.length*.55){
+  eraIndex++;humans.forEach(h=>h.era=eraIndex);log('A humanidade alcançou '+currentEra().name+'.');toast('Nova era: '+currentEra().name);
+  if(eraIndex%3===0)spawnRequest(true);
+ }
+}
+function spawnRequest(force=false){
+ if(requests.filter(r=>!r.done).length>=3&&!force)return;
+ const types=[
+ {title:'Precisamos de chuva',desc:'Nossa colheita está fraca. Poderia enviar chuva?',tool:'rain',reward:20,faith:10},
+ {title:'A aldeia pede uma bênção',desc:'O povo quer saber se você está ouvindo suas preces.',tool:'bless',reward:18,faith:14},
+ {title:'Queremos novas terras verdes',desc:'Ajude a natureza a crescer perto de nossa comunidade.',tool:'forest',reward:24,faith:12},
+ {title:'Há pessoas feridas',desc:'Uma família precisa de sua ajuda para se recuperar.',tool:'heal',reward:28,faith:16},
+ {title:'A fome ameaça nosso povo',desc:'Envie alimento para que possamos continuar crescendo.',tool:'food',reward:25,faith:15},
+ {title:'Sonhamos com um novo lar',desc:'Ajude nosso grupo a fundar uma nova aldeia.',tool:'build',reward:35,faith:20}
+ ];
+ const available=types.filter(t=>powers.some(p=>p.id===t.tool&&p.level<=level));
+ if(!available.length)return;
+ const t=available[ri(0,available.length)],r={...t,id:Math.random().toString(36).slice(2),done:false,age:0};requests.unshift(r);if(requests.length>8)requests.pop();renderRequests();log('Um pedido chegou: '+r.title+'.');toast('Novo pedido dos humanos!');
+}
+function fulfillRequest(tool){
+ const r=requests.find(r=>!r.done&&r.tool===tool);if(!r)return;
+ r.done=true;addXp(r.reward);const targets=humans.slice(0,Math.max(1,Math.floor(humans.length*.35)));targets.forEach(h=>{h.faith=clamp(h.faith+r.faith,0,100);h.happiness=clamp(h.happiness+12,0,100);if(h.faith>=45)h.believer=true});
+ log('Pedido atendido: '+r.title+'. A fé aumentou.');toast('Pedido atendido! +'+r.reward+' XP');renderRequests();
+}
+function usePower(id,x,y){
+ const p=powers.find(p=>p.id===id);if(!p||p.level>level){toast('Esse poder ainda está bloqueado.');return}
+ const radius=5,near=humans.filter(h=>Math.hypot(h.x-x,h.y-y)<radius);
+ if(id==='inspect'){const h=humans.filter(h=>Math.hypot(h.x-x,h.y-y)<1.4).sort((a,b)=>Math.hypot(a.x-x,a.y-y)-Math.hypot(b.x-x,b.y-y))[0];selectedHuman=h||null;renderSelected();return}
+ if(id==='bless'){near.forEach(h=>{h.faith=clamp(h.faith+24,0,100);h.happiness=clamp(h.happiness+25,0,100);if(h.faith>=45)h.believer=true});addXp(near.length*1.5);toast('Uma bênção alcançou '+near.length+' habitantes.')}
+ if(id==='rain'){for(let yy=Math.max(0,Math.floor(y)-5);yy<Math.min(H,Math.floor(y)+6);yy++)for(let xx=Math.max(0,Math.floor(x)-5);xx<Math.min(W,Math.floor(x)+6);xx++){const t=tileAt(xx,yy);if(t&&t.type==='grass')t.tree=Math.random()<.55}near.forEach(h=>h.happiness=clamp(h.happiness+10,0,100));toast('A chuva caiu sobre a terra.')}
+ if(id==='forest'){for(let yy=Math.max(0,Math.floor(y)-4);yy<Math.min(H,Math.floor(y)+5);yy++)for(let xx=Math.max(0,Math.floor(x)-4);xx<Math.min(W,Math.floor(x)+5);xx++){const t=tileAt(xx,yy);if(t&&t.type==='grass'&&Math.random()<.7){t.type='forest';t.tree=true}}toast('Uma floresta nasceu.')}
+ if(id==='heal'){near.forEach(h=>{h.health=100;h.happiness=clamp(h.happiness+18,0,100)});toast(near.length+' habitantes foram curados.')}
+ if(id==='food'){near.forEach(h=>{h.hunger=100;h.happiness=clamp(h.happiness+12,0,100)});toast('Alimento apareceu para '+near.length+' habitantes.')}
+ if(id==='lightning'){const h=near[0];if(h){h.health=0;humans.splice(humans.indexOf(h),1);log('Um raio divino atingiu um habitante.')}toast('O céu foi rasgado por um raio.')}
+ if(id==='build'){if(near.length>=3){near.forEach(h=>h.home={x,y});near.forEach(h=>{h.happiness=clamp(h.happiness+20,0,100);h.faith=clamp(h.faith+8,0,100)});toast('Uma nova comunidade foi fundada.')}else toast('Aproxime o poder de pelo menos três habitantes.')}
+ if(id==='shield'){near.forEach(h=>h.protected=30);near.forEach(h=>h.faith=clamp(h.faith+12,0,100));toast('Uma proteção divina envolve a região.')}
+ if(id==='revive'){if(humans.length<180)spawnHuman(Math.floor(x),Math.floor(y));toast('Uma nova vida surgiu.')}
+ if(id!=='lightning')near.forEach(h=>{if(h.faith>=45)h.believer=true});
+ fulfillRequest(id);renderRequests();renderUI();
+}
+function renderRequests(){
+ $('requests').innerHTML=requests.filter(r=>!r.done).slice(0,4).map(r=>'<div class="panel-card request"><div class="row"><strong>'+escapeHtml(r.title)+'</strong><span class="pill">+'+r.reward+' XP</span></div><p class="tiny muted">'+escapeHtml(r.desc)+'</p><button data-request="'+r.tool+'">Atender pedido</button></div>').join('')||'<p class="muted tiny">Nenhum pedido pendente. Os humanos estão em paz.</p>';
+ $('requests').querySelectorAll('[data-request]').forEach(b=>b.addEventListener('click',()=>{const id=b.dataset.request;const p=powers.find(p=>p.id===id);if(p&&p.level<=level){selectedTool=id;setActiveTool(id);toast('Clique no mapa para usar: '+p.name)}else toast('Desbloqueie esse poder primeiro.')}));
+}
+function renderSelected(){
+ if(!selectedHuman||!humans.includes(selectedHuman)){$('selectedInfo').textContent='Clique em um humano no mapa para conhecer sua história.';return}
+ const h=selectedHuman;$('selectedInfo').innerHTML='<strong>'+escapeHtml(h.name)+'</strong><p class="muted">Habitante da '+currentEra().name+'</p><div class="metric"><span>Idade</span><strong>'+Math.floor(h.age)+' anos</strong></div><div class="metric"><span>Saúde</span><strong>'+Math.round(h.health)+'%</strong></div><div class="metric"><span>Fome</span><strong>'+Math.round(h.hunger)+'%</strong></div><div class="metric"><span>Felicidade</span><strong>'+Math.round(h.happiness)+'%</strong></div><div class="metric"><span>Fé em você</span><strong>'+Math.round(h.faith)+'%</strong></div><div class="metric"><span>Ocupação</span><strong>'+h.job+'</strong></div>';
+}
+function renderUI(){
+ $('level').textContent=level;$('xpText').textContent=Math.floor(xp)+' / '+xpNeed();$('xpBar').style.width=(xp/xpNeed()*100)+'%';$('nextPower').textContent='Próximo poder: '+(powers.find(p=>p.level>level)?.level||'—');
+ $('xpRate').textContent=xpRate().toFixed(1);$('faithCount').textContent=believers();$('population').textContent=humans.length;$('eraTop').textContent=currentEra().name.replace('Era ','');
+ $('powers').innerHTML=powers.map(p=>'<button class="power '+(p.level>level?'locked':'')+' '+(selectedTool===p.id?'active':'')+'" data-power="'+p.id+'" '+(p.level>level?'disabled':'')+'><span class="ico">'+p.icon+'</span><span><strong>'+p.name+'</strong><small>'+(p.level>level?'Desbloqueia no nível '+p.level:p.desc)+'</small></span></button>').join('');
+ $('powers').querySelectorAll('[data-power]').forEach(b=>b.addEventListener('click',()=>{selectedTool=b.dataset.power;setActiveTool(selectedTool);$('leftPanel').classList.remove('open')}));
+ $('worldMetrics').innerHTML='<div class="metric"><span>Habitantes</span><strong>'+humans.length+'</strong></div><div class="metric"><span>Fiéis</span><strong>'+believers()+'</strong></div><div class="metric"><span>Em paz</span><strong>'+(peace()?'Sim':'Não')+'</strong></div><div class="metric"><span>Felicidade média</span><strong>'+Math.round(humans.reduce((a,h)=>a+h.happiness,0)/Math.max(1,humans.length))+'%</strong></div><div class="metric"><span>Geração de XP</span><strong>'+xpRate().toFixed(2)+'/s</strong></div>';
+ $('eraName').textContent=currentEra().name;$('eraDesc').textContent=currentEra().desc;
+ const next=eras[eraIndex+1];$('eraProgress').style.width=next?Math.min(100,humans.length/next.pop*100)+'%':'100%';$('eraCondition').textContent=next?'Próxima era: '+next.name+' · população '+humans.length+'/'+next.pop+' · fé necessária '+Math.min(70,next.need-5)+'%':'A humanidade alcançou seu estágio final conhecido.';
+ renderSelected();
+}
+function setActiveTool(id){document.querySelectorAll('.toolbtn').forEach(b=>b.style.borderColor=b.dataset.tool===id?'var(--gold)':'');$('hint').textContent=id==='inspect'?'Clique em um habitante para ver seus detalhes.':(powers.find(p=>p.id===id)?.desc||'Clique no mundo para usar seu poder.');renderUI()}
+document.querySelectorAll('.toolbtn').forEach(b=>b.addEventListener('click',()=>{selectedTool=b.dataset.tool;setActiveTool(selectedTool)}));
+$('clearSelection').addEventListener('click',()=>{selectedTool='inspect';setActiveTool('inspect')});
+$('pauseBtn').addEventListener('click',()=>{paused=!paused;$('pauseBtn').textContent=paused?'▶ Continuar':'Ⅱ Pausar'});
+$('speedBtn').addEventListener('click',()=>{speed=speed===1?2:speed===2?4:1;$('speedBtn').textContent='Velocidade ×'+speed});
+$('menuBtn').addEventListener('click',()=>$('leftPanel').classList.toggle('open'));
+document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));['requests','civilization','history'].forEach(t=>$('tab-'+t).hidden=t!==b.dataset.tab)}));
+function resize(){const r=canvas.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,2);canvas.width=Math.max(1,Math.floor(r.width*dpr));canvas.height=Math.max(1,Math.floor(r.height*dpr));ctx.setTransform(dpr,0,0,dpr,0,0)}
+new ResizeObserver(resize).observe(canvas);
+function screenToWorld(sx,sy){const r=canvas.getBoundingClientRect(),w=r.width,h=r.height;return{x:(sx-r.left-w/2)/camera.zoom+camera.x,y:(sy-r.top-h/2)/camera.zoom+camera.y}}
+canvas.addEventListener('contextmenu',e=>e.preventDefault());
+canvas.addEventListener('pointerdown',e=>{if(e.button===2){drag={x:e.clientX,y:e.clientY,cx:camera.x,cy:camera.y};canvas.setPointerCapture(e.pointerId)}});
+canvas.addEventListener('pointermove',e=>{if(drag){camera.x=drag.cx-(e.clientX-drag.x)/camera.zoom;camera.y=drag.cy-(e.clientY-drag.y)/camera.zoom}});
+canvas.addEventListener('pointerup',e=>{if(drag){drag=null;return}if(e.button!==0)return;const p=screenToWorld(e.clientX,e.clientY),x=p.x/TILE,y=p.y/TILE;if(x<0||y<0||x>=W||y>=H)return;usePower(selectedTool,x,y)});
+canvas.addEventListener('wheel',e=>{e.preventDefault();camera.zoom=clamp(camera.zoom*(e.deltaY<0?1.12:.89),.45,2.8)},{passive:false});
+function update(dt){
+ elapsed+=dt;const gameDt=dt*speed;
+ if(elapsed>1){elapsed=0;addXp(xpRate());}
+ year+=gameDt*.018;season=Math.floor(year*4)%4;
+ spawnTimer+=gameDt;requestTimer+=gameDt;
+ if(spawnTimer>3.4&&humans.length<260){spawnTimer=0;if(Math.random()<.55)spawnHuman(ri(8,W-8),ri(8,H-8))}
+ if(requestTimer>22&&requests.filter(r=>!r.done).length<3){requestTimer=0;if(Math.random()<.8)spawnRequest()}
+ humans.forEach(h=>{
+  h.age+=gameDt*.002;h.hunger=clamp(h.hunger-gameDt*.15,0,100);
+  h.happiness=clamp(h.happiness+((h.hunger>35?1:-2)-.3)*gameDt*.08,0,100);
+  if(h.faith>0&&h.happiness>30)h.faith=clamp(h.faith+gameDt*.018,0,100);
+  if(h.faith>=45)h.believer=true;else if(h.faith<25)h.believer=false;
+  h.x+=rnd(-.25,.25)*gameDt*.25;h.y+=rnd(-.25,.25)*gameDt*.25;h.x=clamp(h.x,2,W-2);h.y=clamp(h.y,2,H-2);
+  const t=tileAt(Math.floor(h.x),Math.floor(h.y));if(t&&t.type==='water'){h.x+=rnd(-1,1);h.y+=rnd(-1,1)}
+  if(h.protected>0)h.protected-=gameDt;
+  if(h.hunger<2){h.health-=gameDt*.12}
+ });
+ for(let i=humans.length-1;i>=0;i--)if(humans[i].health<=0||humans[i].age>95)humans.splice(i,1);
+ if(humans.length<8&&Math.random()<gameDt*.02)spawnHuman(ri(10,W-10),ri(10,H-10));
+ checkEra();
+}
+function draw(){
+ const r=canvas.getBoundingClientRect(),w=r.width,h=r.height;ctx.clearRect(0,0,w,h);ctx.fillStyle='#101b20';ctx.fillRect(0,0,w,h);
+ ctx.save();ctx.translate(w/2,h/2);ctx.scale(camera.zoom,camera.zoom);ctx.translate(-camera.x,-camera.y);
+ const sx=Math.max(0,Math.floor(camera.x/TILE-w/(2*TILE*camera.zoom))-1),ex=Math.min(W,Math.ceil(camera.x/TILE+w/(2*TILE*camera.zoom))+2),sy=Math.max(0,Math.floor(camera.y/TILE-h/(2*TILE*camera.zoom))-1),ey=Math.min(H,Math.ceil(camera.y/TILE+h/(2*TILE*camera.zoom))+2);
+ for(let y=sy;y<ey;y++)for(let x=sx;x<ex;x++){const t=tileAt(x,y);ctx.fillStyle=colors[t.type];ctx.fillRect(x*TILE,y*TILE,TILE,TILE);if(t.tree){ctx.fillStyle='#315c3d';ctx.beginPath();ctx.arc(x*TILE+8,y*TILE+8,5,0,Math.PI*2);ctx.fill();ctx.fillStyle='#6f9a58';ctx.fillRect(x*TILE+7,y*TILE+10,2,5)}if(t.type==='mountain'){ctx.fillStyle='#9b9b8d';ctx.beginPath();ctx.moveTo(x*TILE+3,y*TILE+13);ctx.lineTo(x*TILE+8,y*TILE+3);ctx.lineTo(x*TILE+14,y*TILE+13);ctx.fill()} }
+ humans.forEach(h=>{const px=h.x*TILE,py=h.y*TILE;ctx.fillStyle=h.believer?'#f4d77a':'#e8c6a1';ctx.beginPath();ctx.arc(px,py,3.6,0,Math.PI*2);ctx.fill();ctx.fillStyle='#334b55';ctx.fillRect(px-2.5,py+2,5,4);if(h.protected>0){ctx.strokeStyle='#8ce1ed';ctx.beginPath();ctx.arc(px,py,7,0,Math.PI*2);ctx.stroke()}if(h===selectedHuman){ctx.strokeStyle='#fff';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(px,py,8,0,Math.PI*2);ctx.stroke()}});
+ if(selectedTool!=='inspect'){ctx.strokeStyle='#f5d17a';ctx.lineWidth=1;ctx.beginPath();ctx.arc(mouse.x,mouse.y,5*TILE,0,Math.PI*2);ctx.stroke()}
+ ctx.restore();
+}
+const mouse={x:0,y:0};canvas.addEventListener('pointermove',e=>{const p=screenToWorld(e.clientX,e.clientY);mouse.x=p.x;mouse.y=p.y});
+function frame(now){const dt=Math.min(.08,(now-last)/1000);last=now;if(!paused)update(dt);draw();requestAnimationFrame(frame)}
+function uiLoop(){renderUI();$('worldTime').textContent='Ano '+Math.floor(year)+' · '+['Primavera','Verão','Outono','Inverno'][season];requestAnimationFrame(uiLoop)}
+initWorld();renderUI();renderRequests();resize();requestAnimationFrame(frame);setInterval(renderUI,900);
+})();
+</script>
+</body>
+</html>
