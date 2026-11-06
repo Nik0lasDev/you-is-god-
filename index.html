@@ -206,7 +206,7 @@ function usePower(id,x,y){
  }
  if(id==='human'){
   if(humans.length>=260)toast('O mundo já atingiu o limite de habitantes.')
-  else{const before=humans.length;spawnHuman(Math.floor(x),Math.floor(y));if(humans.length>before){const created=humans[humans.length-1];created.x=Math.floor(x)+.5;created.y=Math.floor(y)+.5;created.targetX=created.x;created.targetY=created.y;toast('Um novo humano surgiu!');log('Um novo habitante foi criado por sua vontade.')}else toast('Não há espaço habitável nesse local.')}
+  else{const before=humans.length;spawnHuman(Math.floor(x),Math.floor(y));if(humans.length>before){const created=humans[humans.length-1];created.targetX=created.x;created.targetY=created.y;toast('Um novo humano surgiu!');log('Um novo habitante foi criado por sua vontade.')}else toast('Não há espaço habitável nesse local.')}
  }
  if(id==='inspect'){const h=humans.filter(h=>Math.hypot(h.x-x,h.y-y)<1.4).sort((a,b)=>Math.hypot(a.x-x,a.y-y)-Math.hypot(b.x-x,b.y-y))[0];selectedHuman=h||null;renderSelected();return}
  if(id==='bless'){near.forEach(h=>{h.faith=clamp(h.faith+24,0,100);h.happiness=clamp(h.happiness+25,0,100);if(h.faith>=45)h.believer=true});addXp(near.length*1.5);toast('Uma bênção alcançou '+near.length+' habitantes.')}
