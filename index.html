@@ -21,7 +21,7 @@ aside{background:var(--panel);min-height:0;overflow:auto;padding:11px;border-rig
 .levelrow{display:flex;align-items:center;justify-content:space-between}.level{font-size:25px;font-weight:900;color:var(--gold)}.xpbar,.bar{height:7px;border-radius:10px;background:#0c171e;overflow:hidden;margin-top:8px}.xpbar span,.bar span{height:100%;display:block;background:linear-gradient(90deg,#dba94c,#ffe5a0);width:0;transition:width .2s}
 .power-list{display:grid;gap:7px}.power{display:flex;align-items:center;gap:9px;text-align:left;width:100%;padding:9px}.power .ico{font-size:19px;width:25px;text-align:center}.power small{display:block;color:var(--muted);font-size:10px}.power.active{border-color:var(--gold);background:#4b412b}.power.locked{opacity:.48}
 .world{position:relative;min-width:0;min-height:0;background:#101b20;overflow:hidden;display:flex;flex-direction:column}
-.worldbar{display:flex;align-items:center;gap:8px;padding:9px 12px;background:#15242d;border-bottom:1px solid var(--line);z-index:1}.worldbar .spacer{flex:1}.worldbar span{font-size:11px;color:var(--muted)}
+.worldbar{display:flex;align-items:center;gap:8px;padding:9px 12px;background:#15242d;border-bottom:1px solid var(--line);z-index:1} .worldbar{flex-wrap:wrap;max-height:104px;overflow:auto}.worldbar button{padding:6px 8px;font-size:11px;white-space:nowrap}.worldbar .spacer{flex:1}.worldbar span{font-size:11px;color:var(--muted)}
 .canvaswrap{flex:1;min-height:0;position:relative;overflow:hidden}canvas{display:block;width:100%;height:100%;image-rendering:pixelated;cursor:crosshair}
 .hint{position:absolute;left:12px;bottom:12px;background:#111dcee0;border:1px solid #47606a;border-radius:8px;padding:8px 10px;color:#d7e3df;font-size:11px;pointer-events:none;max-width:calc(100% - 24px)}
 .panel-card{background:#20343f;border:1px solid #38515d;border-radius:10px;padding:10px;margin-bottom:9px}.muted{color:var(--muted)}.tiny{font-size:11px}.row{display:flex;justify-content:space-between;align-items:center;gap:8px}.pill{font-size:10px;padding:3px 7px;border-radius:20px;background:#314c57;color:#c5d7d9}
@@ -58,7 +58,7 @@ aside{background:var(--panel);min-height:0;overflow:auto;padding:11px;border-rig
 <section class="section"><h3>Controles</h3><p class="tiny muted">Clique no mapa para usar o poder selecionado. Arraste com o botão direito para mover a câmera. Use a roda do mouse para aproximar.</p><button id="clearSelection" style="width:100%">Cancelar poder selecionado</button></section>
 </aside>
 <main class="world">
-<div class="worldbar"><button data-tool="inspect" class="toolbtn">⌖ Observar</button><button data-tool="bless" class="toolbtn">✦ Benção</button><button data-tool="rain" class="toolbtn">☔ Chuva</button><button data-tool="forest" class="toolbtn">♣ Floresta</button><div class="spacer"></div><span id="worldTime">Ano 1 · Primavera</span></div>
+<div class="worldbar"><button data-tool="inspect" class="toolbtn">⌖ Observar</button><button data-tool="water" class="toolbtn">🌊 Água</button><button data-tool="stone" class="toolbtn">🪨 Pedra</button><button data-tool="seed" class="toolbtn">🌱 Semente</button><button data-tool="sand" class="toolbtn">🏖️ Areia</button><button data-tool="human" class="toolbtn">🧑 Criar humano</button><button data-tool="bless" class="toolbtn">✦ Benção</button><button data-tool="rain" class="toolbtn">☔ Chuva</button><button data-tool="forest" class="toolbtn">♣ Floresta</button><div class="spacer"></div><span id="worldTime">Ano 1 · Primavera</span></div>
 <div class="canvaswrap"><canvas id="world"></canvas><div class="hint" id="hint">Selecione um poder e clique no mundo para usá-lo. Os humanos estão começando sua história.</div><div id="toast"></div></div>
 </main>
 <aside class="right">
@@ -105,6 +105,11 @@ const eras=[
 ];
 const powers=[
 {id:'inspect',name:'Observação',icon:'⌖',level:1,desc:'Conheça os habitantes.'},
+{id:'water',name:'Água',icon:'🌊',level:1,desc:'Crie água no ponto selecionado.'},
+{id:'stone',name:'Pedra',icon:'🪨',level:1,desc:'Coloque blocos de pedra no mundo.'},
+{id:'seed',name:'Semente de árvore',icon:'🌱',level:1,desc:'Plante uma árvore em terreno fértil.'},
+{id:'sand',name:'Areia',icon:'🏖️',level:1,desc:'Transforme o terreno em areia.'},
+{id:'human',name:'Criar humano',icon:'🧑',level:1,desc:'Crie um novo habitante no local.'},
 {id:'bless',name:'Benção divina',icon:'✦',level:1,desc:'Aumenta felicidade e fé.'},
 {id:'rain',name:'Chuva',icon:'☔',level:2,desc:'Faz plantas crescerem e ajuda plantações.'},
 {id:'forest',name:'Criar floresta',icon:'♣',level:3,desc:'Planta árvores em uma região.'},
@@ -185,6 +190,24 @@ function fulfillRequest(tool){
 function usePower(id,x,y){
  const p=powers.find(p=>p.id===id);if(!p||p.level>level){toast('Esse poder ainda está bloqueado.');return}
  const radius=5,near=humans.filter(h=>Math.hypot(h.x-x,h.y-y)<radius);
+ if(id==='water'){
+  const t=tileAt(Math.floor(x),Math.floor(y));if(t){t.type='water';t.tree=false;t.detail=Math.random();toast('Água criada no terreno.')}
+ }
+ if(id==='stone'){
+  const t=tileAt(Math.floor(x),Math.floor(y));if(t){t.type='stone';t.tree=false;t.detail=Math.random();toast('Pedra colocada no mundo.')}
+ }
+ if(id==='seed'){
+  const t=tileAt(Math.floor(x),Math.floor(y));
+  if(t&&t.type!=='water'&&t.type!=='mountain'&&t.type!=='stone'){t.type='forest';t.tree=true;t.detail=Math.random();toast('Uma semente foi plantada.')}
+  else toast('Escolha um terreno livre para plantar.')
+ }
+ if(id==='sand'){
+  const t=tileAt(Math.floor(x),Math.floor(y));if(t){t.type='sand';t.tree=false;t.detail=Math.random();toast('Areia espalhada pelo terreno.')}
+ }
+ if(id==='human'){
+  if(humans.length>=260)toast('O mundo já atingiu o limite de habitantes.')
+  else{const before=humans.length;spawnHuman(Math.floor(x),Math.floor(y));if(humans.length>before){const created=humans[humans.length-1];created.x=Math.floor(x)+.5;created.y=Math.floor(y)+.5;created.targetX=created.x;created.targetY=created.y;toast('Um novo humano surgiu!');log('Um novo habitante foi criado por sua vontade.')}else toast('Não há espaço habitável nesse local.')}
+ }
  if(id==='inspect'){const h=humans.filter(h=>Math.hypot(h.x-x,h.y-y)<1.4).sort((a,b)=>Math.hypot(a.x-x,a.y-y)-Math.hypot(b.x-x,b.y-y))[0];selectedHuman=h||null;renderSelected();return}
  if(id==='bless'){near.forEach(h=>{h.faith=clamp(h.faith+24,0,100);h.happiness=clamp(h.happiness+25,0,100);if(h.faith>=45)h.believer=true});addXp(near.length*1.5);toast('Uma bênção alcançou '+near.length+' habitantes.')}
  if(id==='rain'){for(let yy=Math.max(0,Math.floor(y)-5);yy<Math.min(H,Math.floor(y)+6);yy++)for(let xx=Math.max(0,Math.floor(x)-5);xx<Math.min(W,Math.floor(x)+6);xx++){const t=tileAt(xx,yy);if(t&&t.type==='grass')t.tree=Math.random()<.55}near.forEach(h=>h.happiness=clamp(h.happiness+10,0,100));toast('A chuva caiu sobre a terra.')}
@@ -307,6 +330,10 @@ function draw(){
   }else if(t.type==='forest'){
    ctx.fillStyle='#46783e';ctx.fillRect(px,py+TILE-3,TILE,3);
    if(t.detail<.35){ctx.fillStyle='#6c9d4a';ctx.fillRect(px+3,py+4,3,3)}
+  }else if(t.type==='stone'){
+   ctx.fillStyle='#626b70';ctx.fillRect(px+2,py+5,16,12);
+   ctx.fillStyle='#9da5a3';ctx.fillRect(px+4,py+3,10,5);ctx.fillRect(px+2,py+8,4,4);
+   ctx.fillStyle='#48545a';ctx.fillRect(px+5,py+14,11,2);
   }else if(t.type==='mountain'){
    ctx.fillStyle='#686f69';ctx.fillRect(px,py+TILE-3,TILE,3);
    ctx.fillStyle='#aeb1a0';ctx.beginPath();ctx.moveTo(px+2,py+TILE-3);ctx.lineTo(px+10,py+3);ctx.lineTo(px+18,py+TILE-3);ctx.fill();
