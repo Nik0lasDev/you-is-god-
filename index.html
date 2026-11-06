@@ -81,7 +81,7 @@ aside{background:var(--panel);min-height:0;overflow:auto;padding:11px;border-rig
 'use strict';
 const $ = id => document.getElementById(id);
 const canvas = $('world'), ctx = canvas.getContext('2d');
-const W=88,H=58,TILE=20;
+const W=168,H=112,TILE=20;
 const terrain=[], humans=[], requests=[], history=[], buildings=[], animals=[];
 const eras=[
 {name:'Era Primitiva',desc:'Bandos nômades aprendem a sobreviver e cooperar.',need:0,pop:0},
@@ -124,35 +124,62 @@ const colors={water:'#397b9c',sand:'#d6c184',grass:'#78a94e',forest:'#548b45',mo
 const ORES={copper:{name:'Cobre',color:'#c77b45',era:4},tin:{name:'Estanho',color:'#c4c9c8',era:5},iron:{name:'Ferro',color:'#89949a',era:6},gold:{name:'Ouro',color:'#e9bd45',era:7},coal:{name:'Carvão',color:'#343b40',era:5}};
 const BUILDINGS={house:{name:'Casa',cost:{wood:8,stone:3},work:8},farm:{name:'Plantação',cost:{wood:5,stone:1},work:7},storage:{name:'Armazém',cost:{wood:12,stone:8},work:12},workshop:{name:'Oficina',cost:{wood:12,stone:10,copper:2},work:16},townhall:{name:'Prefeitura',cost:{wood:20,stone:16},work:22}};
 const ANIMAL_TYPES=[{type:'sheep',name:'Ovelha',color:'#e8e2d1'},{type:'cow',name:'Vaca',color:'#b9a58b'},{type:'pig',name:'Porco',color:'#d88e91'},{type:'deer',name:'Cervo',color:'#a9784d'},{type:'chicken',name:'Galinha',color:'#e9d7a2'}];
-let level=1,xp=0,selectedTool='inspect',paused=false,speed=1,year=1,season=0,elapsed=0,spawnTimer=0,requestTimer=0,eraIndex=0,selectedHuman=null,camera={x:W*TILE/2,y:H*TILE/2,zoom:1},drag=null,last=performance.now(),toastTimer=0;
+let level=1,xp=0,selectedTool='inspect',paused=false,speed=1,year=1,season=0,elapsed=0,spawnTimer=0,requestTimer=0,eraIndex=0,selectedHuman=null,camera={x:W*TILE/2,y:H*TILE/2,zoom:.78},drag=null,last=performance.now(),toastTimer=0;
 const rnd=(a,b)=>Math.random()*(b-a)+a,ri=(a,b)=>Math.floor(rnd(a,b)),clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 function log(msg){history.unshift({year,msg});if(history.length>35)history.pop();$('history').innerHTML=history.slice(0,15).map(x=>'<div><span class="muted">Ano '+x.year+'</span><br>'+escapeHtml(x.msg)+'</div>').join('')}
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function toast(s){$('toast').textContent=s;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('show'),1800)}
 function initWorld(){
+ // Ilha principal ampla e um arquipélago distribuído ao redor.
+ const islands=[
+  {x:84,y:56,rx:53,ry:39,weight:1},
+  {x:25,y:24,rx:13,ry:10,weight:.9},
+  {x:45,y:91,rx:17,ry:11,weight:1},
+  {x:139,y:25,rx:15,ry:11,weight:.95},
+  {x:145,y:82,rx:18,ry:13,weight:1},
+  {x:91,y:13,rx:10,ry:7,weight:.85},
+  {x:12,y:68,rx:8,ry:12,weight:.9},
+  {x:119,y:105,rx:11,ry:6,weight:.85}
+ ];
  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
-  const nx=(x-W/2)/(W*.48),ny=(y-H/2)/(H*.48);
-  const edge=Math.sqrt(nx*nx+ny*ny);
   const broad=Math.sin(x*.105+Math.sin(y*.07))*0.42+Math.cos(y*.13-x*.035)*.34;
   const detail=Math.sin(x*.31+y*.17)*.13+Math.cos(y*.29-x*.22)*.12;
-  const land=edge+broad*.28+detail*.12;
+  let nearest=Infinity;
+  for(const island of islands){
+   const dx=(x-island.x)/island.rx,dy=(y-island.y)/island.ry;
+   const edge=Math.sqrt(dx*dx+dy*dy);
+   nearest=Math.min(nearest,edge/island.weight);
+  }
+  const land=nearest+broad*.12+detail*.09;
   let type=land>1.02?'water':land>.91?'sand':(Math.sin(x*.09)*Math.cos(y*.12)+Math.sin((x+y)*.055)>.92?'mountain':(Math.sin(x*.17+y*.08)+Math.cos(y*.16-x*.06)>.52?'forest':'grass'));
   if(x<2||y<2||x>W-3||y>H-3)type='water';
-  const variation=rnd(-.055,.055);
-  terrain.push({type,variation,tree:type==='forest'&&Math.random()<.48,detail:Math.random(),shore:type==='sand'});
+  terrain.push({type,variation:rnd(-.055,.055),tree:type==='forest'&&Math.random()<.48,detail:Math.random(),shore:type==='sand'});
  }
- // Pequenos bosques e manchas de vegetação deixam o mapa menos quadriculado.
- for(let i=0;i<34;i++){
-  const cx=ri(5,W-5),cy=ri(5,H-5),radius=rnd(1.5,4);
-  for(let y=Math.max(2,cy-4);y<=Math.min(H-3,cy+4);y++)for(let x=Math.max(2,cx-4);x<=Math.min(W-3,cx+4);x++){
+ // Bosques em manchas naturais, distribuídos apenas sobre terra.
+ for(let i=0;i<90;i++){
+  const cx=ri(4,W-4),cy=ri(4,H-4),radius=rnd(1.5,4.5);
+  for(let y=Math.max(2,cy-5);y<=Math.min(H-3,cy+5);y++)for(let x=Math.max(2,cx-5);x<=Math.min(W-3,cx+5);x++){
    const t=tileAt(x,y);
    if(t&&t.type==='grass'&&Math.hypot(x-cx,y-cy)<radius&&Math.random()<.68){t.type='forest';t.tree=Math.random()<.78}
   }
  }
- for(let i=0;i<24;i++){const x=ri(5,W-5),y=ri(5,H-5),t=tileAt(x,y);if(t&&t.type!=='water'&&t.type!=='mountain')t.type='ore',t.ore=['copper','tin','iron','gold','coal'][ri(0,5)];}
- for(let i=0;i<12;i++){const x=ri(5,W-5),y=ri(5,H-5),t=tileAt(x,y);if(t&&t.type!=='water'&&t.type!=='mountain')addAnimal(ANIMAL_TYPES[ri(0,ANIMAL_TYPES.length)].type,x,y);}
+ // Depósitos e fauna surgem em diferentes ilhas, sem ocupar o oceano.
+ let placedOres=0,attempts=0;
+ while(placedOres<70&&attempts++<1200){
+  const x=ri(3,W-3),y=ri(3,H-3),t=tileAt(x,y);
+  if(t&&t.type!=='water'&&t.type!=='mountain'&&t.type!=='sand'){
+   t.type='ore';t.ore=['copper','tin','iron','gold','coal'][ri(0,5)];placedOres++;
+  }
+ }
+ let placedAnimals=0;attempts=0;
+ while(placedAnimals<34&&attempts++<1000){
+  const x=ri(3,W-3),y=ri(3,H-3),t=tileAt(x,y);
+  if(t&&t.type!=='water'&&t.type!=='mountain'&&t.type!=='sand'){
+   addAnimal(ANIMAL_TYPES[ri(0,ANIMAL_TYPES.length)].type,x,y);placedAnimals++;
+  }
+ }
  // O mundo começa desabitado. Humanos só surgem quando o jogador usa o poder "Criar humano".
- log('Um mundo novo e silencioso foi criado. Ainda não existem humanos.');
+ log('Um mundo novo e silencioso foi criado. Uma grande ilha e outras terras cercadas pelo oceano aguardam exploração.');
 }
 function tileAt(x,y){return terrain[y*W+x]}
 function createInventory(){return {wood:ri(0,3),stone:ri(0,2),food:ri(2,5),copper:0,tin:0,iron:0,gold:0,coal:0,tools:["machado de pedra","picareta de pedra"]};}
