@@ -149,13 +149,15 @@ function initWorld(){
    if(t&&t.type==='grass'&&Math.hypot(x-cx,y-cy)<radius&&Math.random()<.68){t.type='forest';t.tree=Math.random()<.78}
   }
  }
+ for(let i=0;i<24;i++){const x=ri(5,W-5),y=ri(5,H-5),t=tileAt(x,y);if(t&&t.type!=='water'&&t.type!=='mountain')t.type='ore',t.ore=['copper','tin','iron','gold','coal'][ri(0,5)];}
+ for(let i=0;i<12;i++){const x=ri(5,W-5),y=ri(5,H-5),t=tileAt(x,y);if(t&&t.type!=='water'&&t.type!=='mountain')addAnimal(ANIMAL_TYPES[ri(0,ANIMAL_TYPES.length)].type,x,y);}
  for(let i=0;i<18;i++)spawnHuman(ri(10,W-10),ri(10,H-10),true);
  log('A humanidade surgiu em um mundo novo. Sua história começa agora.');
 }
 function tileAt(x,y){return terrain[y*W+x]}
 function createInventory(){return {wood:ri(0,3),stone:ri(0,2),food:ri(2,5),copper:0,tin:0,iron:0,gold:0,coal:0,tools:["machado de pedra","picareta de pedra"]};}
 function spawnHuman(x,y,initial=false){
- for(let k=0;k<20;k++){const tx=clamp(x+ri(-3,4),2,W-3),ty=clamp(y+ri(-3,4),2,H-3),t=tileAt(tx,ty);if(t&&t.type!=='water'&&t.type!=='mountain'){humans.push({id:Math.random().toString(36).slice(2),x:tx+.5,y:ty+.5,age:rnd(18,42),health:100,hunger:rnd(65,100),happiness:rnd(50,80),faith:rnd(0,initial?18:8),believer:false,era:0,job:['Lenhador','Mineiro','Agricultor','Construtor'][ri(0,4)],inventory:createInventory(),tool:'picareta de pedra',king:false,name:['Aru','Nima','Tarek','Luma','Ivo','Sena','Kiro','Mira'][ri(0,8)]+' '+['do Vale','da Colina','das Águas','da Floresta'][ri(0,4)],home:null,protected:0,targetX:tx+.5,targetY:ty+.5,moveTimer:rnd(.2,2),moveSpeed:rnd(.55,.9),walkPhase:rnd(0,Math.PI*2)});return}}
+ for(let k=0;k<20;k++){const tx=clamp(x+ri(-3,4),2,W-3),ty=clamp(y+ri(-3,4),2,H-3),t=tileAt(tx,ty);if(t&&t.type!=='water'&&t.type!=='mountain'){humans.push({id:Math.random().toString(36).slice(2),x:tx+.5,y:ty+.5,age:rnd(18,42),health:100,hunger:rnd(65,100),happiness:rnd(50,80),faith:rnd(0,initial?18:8),believer:false,era:0,job:['Lenhador','Mineiro','Agricultor','Construtor'][ri(0,4)],inventory:createInventory(),tool:'picareta de pedra',king:false,skin:['#e7bd91','#c98e68','#f0c9a0','#9d684f'][ri(0,4)],clothes:['#557ca0','#8c6048','#69894f','#8c668f','#b65f4e','#d0a84e'][ri(0,6)],hair:['#49372d','#2b2523','#9b7045','#6b5548'][ri(0,4)],name:['Aru','Nima','Tarek','Luma','Ivo','Sena','Kiro','Mira'][ri(0,8)]+' '+['do Vale','da Colina','das Águas','da Floresta'][ri(0,4)],home:null,protected:0,targetX:tx+.5,targetY:ty+.5,moveTimer:rnd(.2,2),moveSpeed:rnd(.55,.9),walkPhase:rnd(0,Math.PI*2)});return}}
 }
 function population(){return humans.length}
 function addAnimal(type,x,y){const a=ANIMAL_TYPES.find(v=>v.type===type)||ANIMAL_TYPES[0];animals.push({type:a.type,name:a.name,color:a.color,x:clamp(x,2,W-3)+.5,y:clamp(y,2,H-3)+.5,targetX:x+.5,targetY:y+.5,timer:0});}
@@ -402,6 +404,9 @@ update=function(dt){
   if(site&&site.funded){site.progress++;if(site.progress>=BUILDINGS[site.type].work){site.complete=true;log(BUILDINGS[site.type].name+' foi construída.');}}
   if(!site&&humans.length>=8&&inv.wood>=8&&inv.stone>=3&&!buildings.some(b=>b.type==='house'&&Math.hypot(b.x-h.x,b.y-h.y)<5)){inv.wood-=8;inv.stone-=3;placeBuilding('house',x,y);h.job='Construtor';}
   if(!site&&inv.wood>=5&&inv.stone>=1&&!buildings.some(b=>b.type==='farm'&&Math.hypot(b.x-h.x,b.y-h.y)<9)){inv.wood-=5;inv.stone--;placeBuilding('farm',x+2,y+2);}
+  if(!site&&eraIndex>=2&&inv.wood>=12&&inv.stone>=8&&!buildings.some(b=>b.type==='storage'&&Math.hypot(b.x-h.x,b.y-h.y)<16)){inv.wood-=12;inv.stone-=8;placeBuilding('storage',x-2,y+2);}
+  if(!site&&eraIndex>=4&&inv.wood>=12&&inv.stone>=10&&inv.copper>=2&&!buildings.some(b=>b.type==='workshop'&&Math.hypot(b.x-h.x,b.y-h.y)<18)){inv.wood-=12;inv.stone-=10;inv.copper-=2;placeBuilding('workshop',x+3,y-2);}
+  if(!site&&eraIndex>=7&&inv.wood>=20&&inv.stone>=16&&!buildings.some(b=>b.type==='townhall')){inv.wood-=20;inv.stone-=16;placeBuilding('townhall',x,y-3);}
  });
  animals.forEach(a=>{a.timer-=step;if(a.timer<=0){a.targetX=clamp(a.x+rnd(-4,4),2,W-3);a.targetY=clamp(a.y+rnd(-4,4),2,H-3);a.timer=rnd(3,7);}const dx=a.targetX-a.x,dy=a.targetY-a.y,d=Math.hypot(dx,dy);if(d>.2){a.x+=dx/d*step*.3;a.y+=dy/d*step*.3;}});
 };
