@@ -269,8 +269,8 @@ function update(dt){
  elapsed+=dt;const gameDt=dt*speed;
  if(elapsed>1){elapsed=0;addXp(xpRate());}
  year+=gameDt*.018;season=Math.floor(year*4)%4;
- spawnTimer+=gameDt;requestTimer+=gameDt;
- if(requestTimer>22&&requests.filter(r=>!r.done).length<3){requestTimer=0;if(Math.random()<.8)spawnRequest()}
+ spawnTimer+=gameDt;
+ if(humans.length>0){requestTimer+=gameDt;if(requestTimer>22&&requests.filter(r=>!r.done).length<3){requestTimer=0;if(Math.random()<.8)spawnRequest()}}
  humans.forEach(h=>{
   h.age+=gameDt*.002;h.hunger=clamp(h.hunger-gameDt*.15,0,100);
   h.happiness=clamp(h.happiness+((h.hunger>35?1:-2)-.3)*gameDt*.08,0,100);
