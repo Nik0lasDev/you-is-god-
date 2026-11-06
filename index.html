@@ -151,8 +151,8 @@ function initWorld(){
  }
  for(let i=0;i<24;i++){const x=ri(5,W-5),y=ri(5,H-5),t=tileAt(x,y);if(t&&t.type!=='water'&&t.type!=='mountain')t.type='ore',t.ore=['copper','tin','iron','gold','coal'][ri(0,5)];}
  for(let i=0;i<12;i++){const x=ri(5,W-5),y=ri(5,H-5),t=tileAt(x,y);if(t&&t.type!=='water'&&t.type!=='mountain')addAnimal(ANIMAL_TYPES[ri(0,ANIMAL_TYPES.length)].type,x,y);}
- for(let i=0;i<18;i++)spawnHuman(ri(10,W-10),ri(10,H-10),true);
- log('A humanidade surgiu em um mundo novo. Sua história começa agora.');
+ // O mundo começa desabitado. Humanos só surgem quando o jogador usa o poder "Criar humano".
+ log('Um mundo novo e silencioso foi criado. Ainda não existem humanos.');
 }
 function tileAt(x,y){return terrain[y*W+x]}
 function createInventory(){return {wood:ri(0,3),stone:ri(0,2),food:ri(2,5),copper:0,tin:0,iron:0,gold:0,coal:0,tools:["machado de pedra","picareta de pedra"]};}
@@ -270,7 +270,6 @@ function update(dt){
  if(elapsed>1){elapsed=0;addXp(xpRate());}
  year+=gameDt*.018;season=Math.floor(year*4)%4;
  spawnTimer+=gameDt;requestTimer+=gameDt;
- if(spawnTimer>3.4&&humans.length<260){spawnTimer=0;if(Math.random()<.55)spawnHuman(ri(8,W-8),ri(8,H-8))}
  if(requestTimer>22&&requests.filter(r=>!r.done).length<3){requestTimer=0;if(Math.random()<.8)spawnRequest()}
  humans.forEach(h=>{
   h.age+=gameDt*.002;h.hunger=clamp(h.hunger-gameDt*.15,0,100);
@@ -305,7 +304,6 @@ function update(dt){
   if(h.hunger<2){h.health-=gameDt*.12}
  });
  for(let i=humans.length-1;i>=0;i--)if(humans[i].health<=0||humans[i].age>95)humans.splice(i,1);
- if(humans.length<8&&Math.random()<gameDt*.02)spawnHuman(ri(10,W-10),ri(10,H-10));
  checkEra();
 }
 function draw(){
