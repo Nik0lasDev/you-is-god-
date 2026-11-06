@@ -58,7 +58,7 @@ aside{background:var(--panel);min-height:0;overflow:auto;padding:11px;border-rig
 <section class="section"><h3>Controles</h3><p class="tiny muted">Clique no mapa para usar o poder selecionado. Arraste com o botão direito para mover a câmera. Use a roda do mouse para aproximar.</p><button id="clearSelection" style="width:100%">Cancelar poder selecionado</button></section>
 </aside>
 <main class="world">
-<div class="worldbar"><button data-tool="inspect" class="toolbtn">⌖ Observar</button><button data-tool="water" class="toolbtn">🌊 Água</button><button data-tool="stone" class="toolbtn">🪨 Pedra</button><button data-tool="seed" class="toolbtn">🌱 Semente</button><button data-tool="sand" class="toolbtn">🏖️ Areia</button><button data-tool="human" class="toolbtn">🧑 Criar humano</button><button data-tool="bless" class="toolbtn">✦ Benção</button><button data-tool="rain" class="toolbtn">☔ Chuva</button><button data-tool="forest" class="toolbtn">♣ Floresta</button><div class="spacer"></div><span id="worldTime">Ano 1 · Primavera</span></div>
+<div class="worldbar"><button data-tool="inspect" class="toolbtn">⌖ Observar</button><button data-tool="water" class="toolbtn">🌊 Água</button><button data-tool="stone" class="toolbtn">🪨 Pedra</button><button data-tool="seed" class="toolbtn">🌱 Semente</button><button data-tool="sand" class="toolbtn">🏖️ Areia</button><button data-tool="human" class="toolbtn">🧑 Criar humano</button><button data-tool="bless" class="toolbtn">✦ Benção</button><button data-tool="rain" class="toolbtn">☔ Chuva</button><button data-tool="forest" class="toolbtn">♣ Floresta</button><button data-tool="copper" class="toolbtn">🟠 Cobre</button><button data-tool="iron" class="toolbtn">⚙️ Ferro</button><button data-tool="gold" class="toolbtn">🟡 Ouro</button><button data-tool="coal" class="toolbtn">⚫ Carvão</button><button data-tool="animal" class="toolbtn">🐑 Animal</button><div class="spacer"></div><span id="worldTime">Ano 1 · Primavera</span></div>
 <div class="canvaswrap"><canvas id="world"></canvas><div class="hint" id="hint">Selecione um poder e clique no mundo para usá-lo. Os humanos estão começando sua história.</div><div id="toast"></div></div>
 </main>
 <aside class="right">
@@ -82,7 +82,7 @@ aside{background:var(--panel);min-height:0;overflow:auto;padding:11px;border-rig
 const $ = id => document.getElementById(id);
 const canvas = $('world'), ctx = canvas.getContext('2d');
 const W=88,H=58,TILE=20;
-const terrain=[], humans=[], requests=[], history=[];
+const terrain=[], humans=[], requests=[], history=[], buildings=[], animals=[];
 const eras=[
 {name:'Era Primitiva',desc:'Bandos nômades aprendem a sobreviver e cooperar.',need:0,pop:0},
 {name:'Era Tribal',desc:'Clãs se unem em torno de tradições e líderes.',need:12,pop:12},
@@ -121,6 +121,9 @@ const powers=[
 {id:'revive',name:'Ressurreição',icon:'☼',level:16,desc:'Traz de volta um habitante perdido.'}
 ];
 const colors={water:'#397b9c',sand:'#d6c184',grass:'#78a94e',forest:'#548b45',mountain:'#85877b'};
+const ORES={copper:{name:'Cobre',color:'#c77b45',era:4},tin:{name:'Estanho',color:'#c4c9c8',era:5},iron:{name:'Ferro',color:'#89949a',era:6},gold:{name:'Ouro',color:'#e9bd45',era:7},coal:{name:'Carvão',color:'#343b40',era:5}};
+const BUILDINGS={house:{name:'Casa',cost:{wood:8,stone:3},work:8},farm:{name:'Plantação',cost:{wood:5,stone:1},work:7},storage:{name:'Armazém',cost:{wood:12,stone:8},work:12},workshop:{name:'Oficina',cost:{wood:12,stone:10,copper:2},work:16},townhall:{name:'Prefeitura',cost:{wood:20,stone:16},work:22}};
+const ANIMAL_TYPES=[{type:'sheep',name:'Ovelha',color:'#e8e2d1'},{type:'cow',name:'Vaca',color:'#b9a58b'},{type:'pig',name:'Porco',color:'#d88e91'},{type:'deer',name:'Cervo',color:'#a9784d'},{type:'chicken',name:'Galinha',color:'#e9d7a2'}];
 let level=1,xp=0,selectedTool='inspect',paused=false,speed=1,year=1,season=0,elapsed=0,spawnTimer=0,requestTimer=0,eraIndex=0,selectedHuman=null,camera={x:W*TILE/2,y:H*TILE/2,zoom:1},drag=null,last=performance.now(),toastTimer=0;
 const rnd=(a,b)=>Math.random()*(b-a)+a,ri=(a,b)=>Math.floor(rnd(a,b)),clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 function log(msg){history.unshift({year,msg});if(history.length>35)history.pop();$('history').innerHTML=history.slice(0,15).map(x=>'<div><span class="muted">Ano '+x.year+'</span><br>'+escapeHtml(x.msg)+'</div>').join('')}
