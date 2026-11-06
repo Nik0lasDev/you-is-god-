@@ -153,8 +153,9 @@ function initWorld(){
  log('A humanidade surgiu em um mundo novo. Sua história começa agora.');
 }
 function tileAt(x,y){return terrain[y*W+x]}
+function createInventory(){return {wood:ri(0,3),stone:ri(0,2),food:ri(2,5),copper:0,tin:0,iron:0,gold:0,coal:0,tools:["machado de pedra","picareta de pedra"]};}
 function spawnHuman(x,y,initial=false){
- for(let k=0;k<20;k++){const tx=clamp(x+ri(-3,4),2,W-3),ty=clamp(y+ri(-3,4),2,H-3),t=tileAt(tx,ty);if(t&&t.type!=='water'&&t.type!=='mountain'){humans.push({id:Math.random().toString(36).slice(2),x:tx+.5,y:ty+.5,age:rnd(18,42),health:100,hunger:rnd(65,100),happiness:rnd(50,80),faith:rnd(0,initial?18:8),believer:false,era:0,job:'Coletor',name:['Aru','Nima','Tarek','Luma','Ivo','Sena','Kiro','Mira'][ri(0,8)]+' '+['do Vale','da Colina','das Águas','da Floresta'][ri(0,4)],home:null,protected:0,targetX:tx+.5,targetY:ty+.5,moveTimer:rnd(.2,2),moveSpeed:rnd(.55,.9),walkPhase:rnd(0,Math.PI*2)});return}}
+ for(let k=0;k<20;k++){const tx=clamp(x+ri(-3,4),2,W-3),ty=clamp(y+ri(-3,4),2,H-3),t=tileAt(tx,ty);if(t&&t.type!=='water'&&t.type!=='mountain'){humans.push({id:Math.random().toString(36).slice(2),x:tx+.5,y:ty+.5,age:rnd(18,42),health:100,hunger:rnd(65,100),happiness:rnd(50,80),faith:rnd(0,initial?18:8),believer:false,era:0,job:['Lenhador','Mineiro','Agricultor','Construtor'][ri(0,4)],inventory:createInventory(),tool:'picareta de pedra',king:false,name:['Aru','Nima','Tarek','Luma','Ivo','Sena','Kiro','Mira'][ri(0,8)]+' '+['do Vale','da Colina','das Águas','da Floresta'][ri(0,4)],home:null,protected:0,targetX:tx+.5,targetY:ty+.5,moveTimer:rnd(.2,2),moveSpeed:rnd(.55,.9),walkPhase:rnd(0,Math.PI*2)});return}}
 }
 function population(){return humans.length}
 function believers(){return humans.filter(h=>h.believer).length}
