@@ -133,7 +133,7 @@ function initWorld(){
 }
 function tileAt(x,y){return terrain[y*W+x]}
 function spawnHuman(x,y,initial=false){
- for(let k=0;k<20;k++){const tx=clamp(x+ri(-3,4),2,W-3),ty=clamp(y+ri(-3,4),2,H-3),t=tileAt(tx,ty);if(t&&t.type!=='water'&&t.type!=='mountain'){humans.push({id:Math.random().toString(36).slice(2),x:tx+.5,y:ty+.5,age:rnd(18,42),health:100,hunger:rnd(65,100),happiness:rnd(50,80),faith:rnd(0,initial?18:8),believer:false,era:0,job:'Coletor',name:['Aru','Nima','Tarek','Luma','Ivo','Sena','Kiro','Mira'][ri(0,8)]+' '+['do Vale','da Colina','das Águas','da Floresta'][ri(0,4)],home:null,protected:0});return}}
+ for(let k=0;k<20;k++){const tx=clamp(x+ri(-3,4),2,W-3),ty=clamp(y+ri(-3,4),2,H-3),t=tileAt(tx,ty);if(t&&t.type!=='water'&&t.type!=='mountain'){humans.push({id:Math.random().toString(36).slice(2),x:tx+.5,y:ty+.5,age:rnd(18,42),health:100,hunger:rnd(65,100),happiness:rnd(50,80),faith:rnd(0,initial?18:8),believer:false,era:0,job:'Coletor',name:['Aru','Nima','Tarek','Luma','Ivo','Sena','Kiro','Mira'][ri(0,8)]+' '+['do Vale','da Colina','das Águas','da Floresta'][ri(0,4)],home:null,protected:0,targetX:tx+.5,targetY:ty+.5,moveTimer:rnd(.2,2),moveSpeed:rnd(.55,.9),walkPhase:rnd(0,Math.PI*2)});return}}
 }
 function population(){return humans.length}
 function believers(){return humans.filter(h=>h.believer).length}
@@ -230,8 +230,30 @@ function update(dt){
   h.happiness=clamp(h.happiness+((h.hunger>35?1:-2)-.3)*gameDt*.08,0,100);
   if(h.faith>0&&h.happiness>30)h.faith=clamp(h.faith+gameDt*.018,0,100);
   if(h.faith>=45)h.believer=true;else if(h.faith<25)h.believer=false;
-  h.x+=rnd(-.25,.25)*gameDt*.25;h.y+=rnd(-.25,.25)*gameDt*.25;h.x=clamp(h.x,2,W-2);h.y=clamp(h.y,2,H-2);
-  const t=tileAt(Math.floor(h.x),Math.floor(h.y));if(t&&t.type==='water'){h.x+=rnd(-1,1);h.y+=rnd(-1,1)}
+  // Cada habitante escolhe um destino e caminha até ele, em vez de oscilar no mesmo ponto.
+  h.moveTimer-=gameDt;
+  let dx=h.targetX-h.x,dy=h.targetY-h.y,dist=Math.hypot(dx,dy);
+  if(h.moveTimer<=0||dist<.3){
+   let found=false;
+   for(let attempt=0;attempt<12;attempt++){
+    const angle=rnd(0,Math.PI*2),range=rnd(3,8);
+    const tx=clamp(h.x+Math.cos(angle)*range,2,W-3),ty=clamp(h.y+Math.sin(angle)*range,2,H-3);
+    const targetTile=tileAt(Math.floor(tx),Math.floor(ty));
+    if(targetTile&&targetTile.type!=='water'&&targetTile.type!=='mountain'){
+     h.targetX=tx;h.targetY=ty;h.moveTimer=rnd(3,7);found=true;break;
+    }
+   }
+   if(!found){h.targetX=h.x;h.targetY=h.y;h.moveTimer=1}
+   dx=h.targetX-h.x;dy=h.targetY-h.y;dist=Math.hypot(dx,dy);
+  }
+  if(dist>.05){
+   const step=Math.min(dist,h.moveSpeed*gameDt);
+   const nx=clamp(h.x+dx/dist*step,2,W-3),ny=clamp(h.y+dy/dist*step,2,H-3);
+   const nextTile=tileAt(Math.floor(nx),Math.floor(ny));
+   if(nextTile&&nextTile.type!=='water'&&nextTile.type!=='mountain'){h.x=nx;h.y=ny}
+   else h.moveTimer=0;
+   h.walkPhase+=gameDt*9;
+  }
   if(h.protected>0)h.protected-=gameDt;
   if(h.hunger<2){h.health-=gameDt*.12}
  });
