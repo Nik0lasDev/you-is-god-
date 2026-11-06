@@ -377,6 +377,41 @@ function draw(){
 const mouse={x:0,y:0};canvas.addEventListener('pointermove',e=>{const p=screenToWorld(e.clientX,e.clientY);mouse.x=p.x;mouse.y=p.y});
 function frame(now){const dt=Math.min(.08,(now-last)/1000);last=now;if(!paused)update(dt);draw();requestAnimationFrame(frame)}
 function uiLoop(){renderUI();$('worldTime').textContent='Ano '+Math.floor(year)+' · '+['Primavera','Verão','Outono','Inverno'][season];requestAnimationFrame(uiLoop)}
+
+const extraStyle=document.createElement('style');extraStyle.textContent='.inventory-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:8px}.inventory-item{background:#172a34;border:1px solid #344b58;border-radius:6px;padding:5px;font-size:10px}.inventory-item strong{display:block;color:#f1d58f;font-size:12px}';document.head.appendChild(extraStyle);
+const baseSelected=renderSelected;
+renderSelected=function(){baseSelected();if(!selectedHuman||!humans.includes(selectedHuman))return;const h=selectedHuman,inv=h.inventory||{};const entries=Object.entries(inv).filter(([k])=>k!=='tools');$('selectedInfo').innerHTML+='<p><strong>Inventário individual</strong></p><div class="inventory-grid">'+entries.map(([k,v])=>'<div class="inventory-item">'+k+'<strong>'+v+'</strong></div>').join('')+'</div><p class="tiny muted">Ferramentas: '+(inv.tools||[]).join(', ')+'</p><p class="tiny muted">'+(h.king?'👑 '+(h.kingdom||'Rei'):'Cidadão')+'</p>';};
+const baseUpdate=update;
+update=function(dt){
+ baseUpdate(dt);const step=dt*speed;
+ humans.forEach(h=>{
+  const inv=h.inventory||(h.inventory=createInventory());h.workTimer=(h.workTimer||0)-step;if(h.workTimer>0)return;h.workTimer=2.5;
+  const x=Math.floor(h.x),y=Math.floor(h.y);
+  if(h.job==='Lenhador'||h.job==='Coletor'){
+   outerWood:for(let yy=Math.max(1,y-2);yy<=Math.min(H-2,y+2);yy++)for(let xx=Math.max(1,x-2);xx<=Math.min(W-2,x+2);xx++){const t=tileAt(xx,yy);if(t&&t.tree&&inv.wood<40){t.tree=false;inv.wood+=2;h.tool='machado de pedra';break outerWood;}}
+  }
+  if(h.job==='Mineiro'||h.job==='Construtor'){
+   outerMine:for(let yy=Math.max(1,y-2);yy<=Math.min(H-2,y+2);yy++)for(let xx=Math.max(1,x-2);xx<=Math.min(W-2,x+2);xx++){const t=tileAt(xx,yy);if(t&&t.type==='stone'&&inv.stone<40){inv.stone+=2;h.tool='picareta de pedra';break outerMine;}if(t&&t.type==='ore'&&inv[t.ore]<30&&(ORES[t.ore]?.era||99)<=eraIndex){inv[t.ore]++;t.type='stone';delete t.ore;h.tool='picareta de pedra';break outerMine;}}
+  }
+  if(h.job==='Agricultor'&&inv.food<40&&buildings.some(b=>b.type==='farm'&&b.complete&&Math.hypot(b.x-h.x,b.y-h.y)<12))inv.food+=2;
+  if(inv.food<8&&inv.wood>0){inv.wood--;inv.food+=3;h.hunger=100;}
+  let site=buildings.find(b=>!b.complete&&Math.hypot(b.x-h.x,b.y-h.y)<10);
+  if(site&&!site.funded){const cost=BUILDINGS[site.type].cost;if(Object.entries(cost).every(([k,v])=>(inv[k]||0)>=v)){Object.entries(cost).forEach(([k,v])=>inv[k]-=v);site.funded=true;}}
+  if(site&&site.funded){site.progress++;if(site.progress>=BUILDINGS[site.type].work){site.complete=true;log(BUILDINGS[site.type].name+' foi construída.');}}
+  if(!site&&humans.length>=8&&inv.wood>=8&&inv.stone>=3&&!buildings.some(b=>b.type==='house'&&Math.hypot(b.x-h.x,b.y-h.y)<5)){inv.wood-=8;inv.stone-=3;placeBuilding('house',x,y);h.job='Construtor';}
+  if(!site&&inv.wood>=5&&inv.stone>=1&&!buildings.some(b=>b.type==='farm'&&Math.hypot(b.x-h.x,b.y-h.y)<9)){inv.wood-=5;inv.stone--;placeBuilding('farm',x+2,y+2);}
+ });
+ animals.forEach(a=>{a.timer-=step;if(a.timer<=0){a.targetX=clamp(a.x+rnd(-4,4),2,W-3);a.targetY=clamp(a.y+rnd(-4,4),2,H-3);a.timer=rnd(3,7);}const dx=a.targetX-a.x,dy=a.targetY-a.y,d=Math.hypot(dx,dy);if(d>.2){a.x+=dx/d*step*.3;a.y+=dy/d*step*.3;}});
+};
+const baseDraw=draw;
+draw=function(){
+ baseDraw();const r=canvas.getBoundingClientRect(),w=r.width,h=r.height;ctx.save();ctx.translate(w/2,h/2);ctx.scale(camera.zoom,camera.zoom);ctx.translate(-camera.x,-camera.y);
+ buildings.forEach(b=>{const x=b.x*TILE,y=b.y*TILE;ctx.fillStyle=b.complete?'#9b7650':'#b9a06c';ctx.fillRect(x-8,y-7,16,13);ctx.fillStyle=b.complete?'#a34d40':'#d0b77d';ctx.beginPath();ctx.moveTo(x-10,y-7);ctx.lineTo(x,y-15);ctx.lineTo(x+10,y-7);ctx.fill();if(b.type==='farm'&&b.complete){ctx.fillStyle='#9bc45a';for(let i=-5;i<=5;i+=4)ctx.fillRect(x+i,y-2,2,7);}if(b.type==='townhall'&&b.complete){ctx.fillStyle='#f4d36d';ctx.fillRect(x-2,y-20,4,6);}});
+ animals.forEach(a=>{const x=a.x*TILE,y=a.y*TILE;ctx.fillStyle=a.color;ctx.fillRect(x-5,y-3,10,6);ctx.fillRect(x+3,y-6,4,5);ctx.fillStyle='#302a26';ctx.fillRect(x+5,y-4,1,1);ctx.fillRect(x-3,y+2,2,3);ctx.fillRect(x+2,y+2,2,3);});
+ for(let yy=0;yy<H;yy++)for(let xx=0;xx<W;xx++){const t=tileAt(xx,yy);if(t&&t.type==='ore'){const x=xx*TILE,y=yy*TILE;ctx.fillStyle='#646e72';ctx.fillRect(x+2,y+5,16,12);ctx.fillStyle=ORES[t.ore]?.color||'#aaa';ctx.fillRect(x+5,y+6,5,4);ctx.fillRect(x+12,y+11,4,4);}}
+ humans.forEach(h=>{if(h.king){const x=h.x*TILE,y=h.y*TILE;ctx.fillStyle='#f4d36d';ctx.fillRect(x-4,y-14,8,3);ctx.fillRect(x-3,y-16,2,2);ctx.fillRect(x+1,y-16,2,2);}});
+ ctx.restore();
+};
 initWorld();renderUI();renderRequests();resize();requestAnimationFrame(frame);setInterval(renderUI,900);
 })();
 </script>
