@@ -379,6 +379,8 @@ function frame(now){const dt=Math.min(.08,(now-last)/1000);last=now;if(!paused)u
 function uiLoop(){renderUI();$('worldTime').textContent='Ano '+Math.floor(year)+' · '+['Primavera','Verão','Outono','Inverno'][season];requestAnimationFrame(uiLoop)}
 
 const extraStyle=document.createElement('style');extraStyle.textContent='.inventory-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:8px}.inventory-item{background:#172a34;border:1px solid #344b58;border-radius:6px;padding:5px;font-size:10px}.inventory-item strong{display:block;color:#f1d58f;font-size:12px}';document.head.appendChild(extraStyle);
+const extraTools=[['copper','Minério de cobre','🟠'],['tin','Minério de estanho','⚪'],['iron','Minério de ferro','⚙️'],['gold','Minério de ouro','🟡'],['coal','Carvão','⚫'],['animal','Criar animal','🐑']];
+extraTools.forEach(([id,name,icon])=>powers.push({id,name,icon,level:1,desc:'Coloque '+name.toLowerCase()+' no mundo.'}));
 const baseSelected=renderSelected;
 renderSelected=function(){baseSelected();if(!selectedHuman||!humans.includes(selectedHuman))return;const h=selectedHuman,inv=h.inventory||{};const entries=Object.entries(inv).filter(([k])=>k!=='tools');$('selectedInfo').innerHTML+='<p><strong>Inventário individual</strong></p><div class="inventory-grid">'+entries.map(([k,v])=>'<div class="inventory-item">'+k+'<strong>'+v+'</strong></div>').join('')+'</div><p class="tiny muted">Ferramentas: '+(inv.tools||[]).join(', ')+'</p><p class="tiny muted">'+(h.king?'👑 '+(h.kingdom||'Rei'):'Cidadão')+'</p>';};
 const baseUpdate=update;
@@ -391,7 +393,7 @@ update=function(dt){
    outerWood:for(let yy=Math.max(1,y-2);yy<=Math.min(H-2,y+2);yy++)for(let xx=Math.max(1,x-2);xx<=Math.min(W-2,x+2);xx++){const t=tileAt(xx,yy);if(t&&t.tree&&inv.wood<40){t.tree=false;inv.wood+=2;h.tool='machado de pedra';break outerWood;}}
   }
   if(h.job==='Mineiro'||h.job==='Construtor'){
-   outerMine:for(let yy=Math.max(1,y-2);yy<=Math.min(H-2,y+2);yy++)for(let xx=Math.max(1,x-2);xx<=Math.min(W-2,x+2);xx++){const t=tileAt(xx,yy);if(t&&t.type==='stone'&&inv.stone<40){inv.stone+=2;h.tool='picareta de pedra';break outerMine;}if(t&&t.type==='ore'&&inv[t.ore]<30&&(ORES[t.ore]?.era||99)<=eraIndex){inv[t.ore]++;t.type='stone';delete t.ore;h.tool='picareta de pedra';break outerMine;}}
+   outerMine:for(let yy=Math.max(1,y-2);yy<=Math.min(H-2,y+2);yy++)for(let xx=Math.max(1,x-2);xx<=Math.min(W-2,x+2);xx++){const t=tileAt(xx,yy);if(t&&(t.type==='stone'||t.type==='mountain')&&inv.stone<40){inv.stone+=2;if(t.type==='mountain')t.type='grass';h.tool='picareta de pedra';break outerMine;}if(t&&t.type==='ore'&&inv[t.ore]<30&&(ORES[t.ore]?.era||99)<=eraIndex){inv[t.ore]++;t.type='stone';delete t.ore;h.tool='picareta de pedra';break outerMine;}}
   }
   if(h.job==='Agricultor'&&inv.food<40&&buildings.some(b=>b.type==='farm'&&b.complete&&Math.hypot(b.x-h.x,b.y-h.y)<12))inv.food+=2;
   if(inv.food<8&&inv.wood>0){inv.wood--;inv.food+=3;h.hunger=100;}
